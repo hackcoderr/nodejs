@@ -36,8 +36,11 @@ jobs:
             USER_NAME: ${{ secrets.USERNAME }}
             
         run: |
+        
           set -x
           echo "$PUBLIC_KEY" > private_key && chmod 600 private_key
+          cat private_key
+          ls -l
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '          
             cd /home/ubuntu/nodejs &&
             git checkout master &&
