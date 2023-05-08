@@ -1,0 +1,55 @@
+name: CI/CD counter app
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [latest]
+        
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm i
+      - run: npm run build --if-present    
+
+  Deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy in EC2
+        env:
+            PRIVATE_KEY: ${{ secrets.PUBLIC_KEY }}
+            HOSTNAME: ${{ secrets.HOSTNAME }}
+            USER_NAME: ${{ secrets.USERNAME }}
+            
+            
+        run: |
+        
+          set -x
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          cat private_key
+          ls -l
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '          
+            cd /home/ubuntu/nodejs &&
+            git checkout master &&
+            git fetch --all &&
+            git reset --hard origin/master &&
+            git pull origin master 
+            npm i
+            npm run start
+          '
+          ssh_exit_code=$?
+          echo "ssh exit code: $ssh_exit_code"
