@@ -1,55 +1,42 @@
-name: CI/CD counter app
+name: Build and Push Docker Image
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches:
+      - master
+
+env:
+  IMAGE_NAME: nodejs
+  DOCKER_BUILDKIT: 1
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [latest]
-        
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm i
-      - run: npm run build --if-present    
 
-  Deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    
     steps:
-      - uses: actions/checkout@v2
-      - name: Deploy in EC2
-        env:
-            PRIVATE_KEY: ${{ secrets.PUBLIC_KEY }}
-            HOSTNAME: ${{ secrets.HOSTNAME }}
-            USER_NAME: ${{ secrets.USERNAME }}
-            
-            
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.TOKEN }}
+      
+      - name: Tag image as latest
         run: |
-        
-          set -x
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          cat private_key
-          ls -l
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '          
-            cd /home/ubuntu/nodejs &&
-            git checkout master &&
-            git fetch --all &&
-            git reset --hard origin/master &&
-            git pull origin master 
-            npm i
-            npm run start
-          '
-          ssh_exit_code=$?
-          echo "ssh exit code: $ssh_exit_code"
+          docker tag ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:latest
+          docker push ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:latest
