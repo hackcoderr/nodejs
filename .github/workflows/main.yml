@@ -45,5 +45,3 @@ jobs:
             git reset --hard origin/master &&
             git pull origin master 
           '
-          ssh_exit_code=$?
-          echo "ssh exit code: $ssh_exit_code"
