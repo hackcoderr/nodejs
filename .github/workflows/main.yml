@@ -51,3 +51,5 @@ jobs:
             npm i
             npm run start
           '
+          ssh_exit_code=$?
+          echo "ssh exit code: $ssh_exit_code"
