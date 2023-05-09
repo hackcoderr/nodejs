@@ -36,7 +36,7 @@ jobs:
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
           
       - name: Connect to AWS instance and run command
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v2
         with:
           host: ${{ env.HOSTNAME }}
           username: ${{ env.USERNAME }}
