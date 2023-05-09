@@ -10,14 +10,10 @@ env:
   DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
   IMAGE_NAME: nodejs
   TAG: latest
-  AWS_INSTANCE_IP: ${{ secrets.HOSTNAME }}
-  AWS_INSTANCE_KEY: ${{ secrets.PUBLIC_KEY }}
-  AWS_INSTANCE_USERNAME: ${{ secrets.USERNAME }}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -28,19 +24,27 @@ jobs:
           username: ${{ env.DOCKER_HUB_USERNAME }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
-      - name: Build and Push Docker Image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
           context: .
           push: true
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
-          
-      - name: Connect to AWS instance and run command
-        uses: appleboy/ssh-action@v2
-        with:
-          host: ${{ env.HOSTNAME }}
-          username: ${{ env.USERNAME }}
-          key: ${{ env.PUBLIC_KEY }}
-          port: 22
-          script: |
-             docker pull ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}     
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.PUBLIC_KEY }}
+          HOSTNAME: ${{ env.HOSTNAME }}
+          USER_NAME: ${{ env.USERNAME }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
+             docker pull hackcoderr/nodejs
+          '
