@@ -10,9 +10,6 @@ env:
   DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
   IMAGE_NAME: nodejs
   TAG: latest
-  PRIVATE_KEY: ${{ secrets.PUBLIC_KEY }}
-  HOSTNAME: ${{ env.HOSTNAME }}
-  USER_NAME: ${{ env.USERNAME }}
 
 jobs:
   build-and-push:
@@ -40,8 +37,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        
 
       - name: Deploy to EC2
+        env: 
+            PRIVATE_KEY: ${{ secrets.PUBLIC_KEY }}
+            HOSTNAME: ${{ env.HOSTNAME }}
+            USER_NAME: ${{ env.USERNAME }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           cat private_key
