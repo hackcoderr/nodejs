@@ -29,12 +29,9 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
-      - name: Login to GHCR
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: 'Login to GitHub Container Registry'
+        run: |
+          echo $TOKEN | docker login ghcr.io -u hackcoderr --password-stdin
           
       
       - name: Tag image as latest
