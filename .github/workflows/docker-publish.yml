@@ -10,6 +10,9 @@ env:
   DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
   IMAGE_NAME: nodejs
   TAG: latest
+  AWS_INSTANCE_IP: ${{ secrets.HOSTNAME }}
+  AWS_INSTANCE_KEY: ${{ secrets.PUBLIC_KEY }}
+  AWS_INSTANCE_USERNAME: ${{ secrets.USERNAME }}
 
 jobs:
   build-and-push:
@@ -31,3 +34,13 @@ jobs:
           context: .
           push: true
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
+          
+      - name: Connect to AWS instance and run command
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.HOSTNAME }}
+          username: ${{ env.USERNAME }}
+          key: ${{ env.PUBLIC_KEY }}
+          port: 22
+          script: |
+             docker pull ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}     
