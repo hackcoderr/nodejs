@@ -34,21 +34,24 @@ jobs:
           push: true
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.commit_sha.outputs.SHA }}
 
-  Deploy:
+  deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v3 
+      - uses: actions/checkout@v2 
       - name: Deploy in EC2
         env:
             PRIVATE_KEY: ${{ secrets.PUBLIC_KEY }}
             HOSTNAME: ${{ secrets.HOSTNAME }}
             USER_NAME: ${{ secrets.USERNAME }}
+            IMAGE_TAG: ${{ github.sha }}
             
         run: |
           set -x
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '          
-            docker-compose -f nodejs/docker-compose.yaml up -d 
+            cd nodejs
+            docker-compose pull
+            IMAGE_TAG=$IMAGE_TAG docker-compose up -d 
           '
