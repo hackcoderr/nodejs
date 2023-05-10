@@ -1,4 +1,4 @@
-name: Docker Build and Push
+name: Nodejs Project Demo CI/CD
 
 on:
   push:
@@ -9,7 +9,6 @@ env:
   DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
   DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
   IMAGE_NAME: nodejs
-  IMAGE_TAG: $CI_COMMIT_SHA
 
 jobs:
   build-and-push:
@@ -17,6 +16,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Get the commit SHA
+        id: commit_sha
+        run: echo "::set-output name=SHA::$(git rev-parse --short HEAD)"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v1
@@ -29,7 +32,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.commit_sha.outputs.SHA }}
 
   Deploy:
     needs: build-and-push
