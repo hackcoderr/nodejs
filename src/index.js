@@ -8,7 +8,7 @@ app.get("/",(req,res)=>{
   console.log("Server is running successfully");
 
   res.send({
-    message: "Get route is working successfully"
+    message: "Server has started successfully"
   })
 })
 
