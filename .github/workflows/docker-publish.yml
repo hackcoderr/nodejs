@@ -31,22 +31,25 @@ jobs:
           push: true
           tags: ${{ env.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
 
-  deploy:
+  Deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        
-
-      - name: Deploy to EC2
-        env: 
+      - uses: actions/checkout@v3 
+      - name: Deploy in EC2
+        env:
             PRIVATE_KEY: ${{ secrets.PUBLIC_KEY }}
-            HOSTNAME: ${{ env.HOSTNAME }}
-            USER_NAME: ${{ env.USERNAME }}
+            HOSTNAME: ${{ secrets.HOSTNAME }}
+            USER_NAME: ${{ secrets.USERNAME }}
+            
         run: |
+          set -x
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          cat private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-             mkdir sachin
+          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '          
+            cd /home/ubuntu/nodejs &&
+            git checkout master &&
+            git fetch --all &&
+            git reset --hard origin/master &&
+            git pull origin master 
           '
