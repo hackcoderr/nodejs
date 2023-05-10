@@ -47,5 +47,5 @@ jobs:
           set -x
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '          
-            mkdir nodejss 
+            docker-compose -f nodejs/docker-compose.yaml up -d 
           '
