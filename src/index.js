@@ -4,6 +4,14 @@ dotenv.config();
 const PORT = process.env.PORT;
 const app = express();
 
+app.get("/",(req,res)=>{
+  console.log("Server is running successfully");
+
+  res.send({
+    message: "Get route is working successfully"
+  })
+})
+
 app.listen(PORT, () => {
   console.log(`Application is running on PORT ${PORT}`);
 });
